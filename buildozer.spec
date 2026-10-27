@@ -5,11 +5,10 @@ package.domain = com.gafori
 source.dir = .
 source.include_exts = py,png,jpg,jpeg,webp,ttf
 version = 1.0.0
-requirements = python3,kivy,pillow,arabic-reshaper,python-bidi
+requirements = python3,kivy==2.3.0,pillow,arabic-reshaper,python-bidi
 orientation = portrait
 fullscreen = 0
 
-# Android build settings
 android.api = 33
 android.minapi = 23
 android.ndk = 25b
