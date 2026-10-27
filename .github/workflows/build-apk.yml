@@ -4,6 +4,8 @@ name: Build Gafori Studio APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'main.py'
       - 'buildozer.spec'
@@ -15,24 +17,24 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout repository
+      - name: دریافت فایل‌های پروژه
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: نصب جاوا
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Python
+      - name: نصب پایتون
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Linux dependencies
+      - name: نصب ابزارهای لینوکس
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -40,21 +42,33 @@ jobs:
             zlib1g-dev libncurses5-dev libncursesw5-dev \
             cmake libffi-dev libssl-dev automake
 
-      - name: Install build tools
+      - name: نصب ابزار ساخت برنامه
         run: |
           python -m pip install --upgrade pip setuptools
           pip install "Cython==0.29.36" "buildozer==1.5.0"
 
-      - name: Check project files
+      - name: بررسی فایل‌های پروژه
         run: |
           test -f main.py
           test -f buildozer.spec
 
-      - name: Build APK
+      - name: ساخت فایل اندروید
+        shell: bash
         run: |
+          set -o pipefail
           buildozer -v android debug 2>&1 | tee build.log
 
-      - name: Upload build log
+      - name: پیدا کردن فایل APK
+        if: success()
+        shell: bash
+        run: |
+          echo "بررسی فایل‌های ساخته‌شده..."
+          find . -type f -name "*.apk" -print
+          mkdir -p output
+          find . -type f -name "*.apk" -exec cp {} output/ \;
+          test -n "$(find output -type f -name '*.apk' -print -quit)"
+
+      - name: ذخیره گزارش ساخت
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -62,10 +76,10 @@ jobs:
           path: build.log
           if-no-files-found: ignore
 
-      - name: Upload APK
+      - name: دریافت فایل APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Gafori-Studio-APK
-          path: bin/*.apk
+          path: output/*.apk
           if-no-files-found: error
